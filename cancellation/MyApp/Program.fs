@@ -1,9 +1,10 @@
 open System
+
+open System.Threading
 open System.Threading.Tasks
 open Microsoft.AspNetCore.Http
 open Microsoft.AspNetCore.Builder
 open Microsoft.Extensions.Hosting
-
 
 type PongResponse = { Pong: bool }
 
@@ -17,25 +18,33 @@ let main args =
     |> ignore
 
     app.MapGet(
-        "/cancellableRequest",
-        Func<Task<IResult>> (fun () ->
+        "/cancellable1",
+        Func<CancellationToken, Task<IResult>> (fun (cancellationToken) ->
             task {
-                let! _ = Task.Delay(5000)
-                printfn "waited!"
+                let! _ = Task.Delay(5000, cancellationToken)
+                printfn "cancellable request finished!"
                 return Results.Ok { Pong = true }
             })
     )
     |> ignore
 
     app.MapGet(
-        "/notCancellableRequest",
-        Func<IResult> (fun () ->
-            Task.Delay(5000)
-            |> Async.AwaitTask
-            |> Async.RunSynchronously
-            |> ignore
+        "/cancellable2",
+        Func<CancellationToken, IResult> (fun (cancellationToken) ->
+            let mutable cnt = 0
 
-            printfn "waited!"
+            while cnt < 10 do
+                Task.Delay(1000)
+                |> Async.AwaitTask
+                |> Async.RunSynchronously
+                |> ignore
+
+                printfn "%ds waited" cnt
+                cancellationToken.ThrowIfCancellationRequested()
+                cnt <- cnt + 1
+
+
+            printfn "not cancellable request finished!"
             Results.Ok({ Pong = true }))
     )
     |> ignore
