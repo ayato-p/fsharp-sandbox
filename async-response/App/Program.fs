@@ -1,5 +1,6 @@
 open System
 open System.Collections.Generic
+open System.Threading
 open System.Threading.Tasks
 open Microsoft.AspNetCore.Http
 open Microsoft.AspNetCore.Builder
@@ -23,9 +24,10 @@ let main args =
     app.MapGet("/task-ping", Func<Task<IResult>> Handlers.JustReturnTaskPong)
     |> ignore
 
-    app.MapGet("/stream", Func<IAsyncEnumerable<Handlers.Pong>> Handlers.ReturnSomethingEnumerable)
+    app.MapGet("/stream", Func<CancellationToken, IAsyncEnumerable<Handlers.Pong>> Handlers.ReturnSomethingEnumerable)
     |> ignore
 
+    app.MapGet("/large", Func<IResult> Handlers.ReturnLargePongs) |> ignore
     app.Run()
 
     0 // Exit code
