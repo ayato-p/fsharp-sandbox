@@ -28,6 +28,13 @@ let main args =
     |> ignore
 
     app.MapGet("/large", Func<IResult> Handlers.ReturnLargePongs) |> ignore
+
+    app.MapGet("/good-compose-async", Func<Task<IResult>>(Handlers.GoodComposeAsync >> Async.StartAsTask))
+    |> ignore
+
+    app.MapGet("/bad-compose-async", Func<Task<IResult>>(Handlers.BadComposeAsync >> Async.StartAsTask))
+    |> ignore
+
     app.Run()
 
     0 // Exit code

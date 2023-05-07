@@ -1,5 +1,6 @@
 module App.Handlers
 
+open System
 open System.Threading
 open System.Threading.Tasks
 open Microsoft.AspNetCore.Http
@@ -8,7 +9,7 @@ open Microsoft.Extensions.Logging
 open FSharp.Control
 
 
-type Pong = { pong: bool }
+type Pong = { pong: bool; data: int seq }
 
 let doSomethingAsync () =
     task {
@@ -22,32 +23,35 @@ let doSomethingAsync () =
 
 let JustReturnPong () =
     doSomethingAsync () |> Async.AwaitTask |> Async.RunSynchronously |> ignore
-    Results.Ok { pong = true }
+    Results.Ok { pong = true; data = seq { 1..10000 } }
 
 let JustReturnAsyncPong () =
     async {
         let! _ = doSomethingAsync () |> Async.AwaitTask
-        return Results.Ok { pong = true }
+        return Results.Ok { pong = true; data = seq { 1..10000 } }
     }
 
 let JustReturnAsyncToTaskPong () =
     async {
         let! _ = doSomethingAsync () |> Async.AwaitTask
-        return Results.Ok { pong = true }
+        return Results.Ok { pong = true; data = seq { 1..10000 } }
     }
     |> Async.StartAsTask
 
 let JustReturnTaskPong () =
     task {
         let! _ = doSomethingAsync ()
-        return Results.Ok { pong = true }
+        return Results.Ok { pong = true; data = seq { 1..10000 } }
     }
 
 let getPong x =
     async {
-        let! _ = Task.Delay(100) |> Async.AwaitTask
+        do! Async.Sleep 100
         printfn "%d" x
-        return { pong = true }
+
+        return
+            { pong = true
+              data = seq { 1..10000 } |> List.ofSeq |> List.map ((*) 2) }
     }
 
 let ReturnSomethingEnumerable (token: CancellationToken) =
@@ -67,3 +71,35 @@ let ReturnLargePongs () =
     |> Async.RunSynchronously
     |> Seq.ofArray
     |> Results.Ok
+
+let private AsyncF1 () : Async<int> =
+    async {
+        printfn "Start AsyncF1"
+        do! Async.Sleep 2000
+        printfn "Finish AsyncF1"
+        return 42
+    }
+
+let private AsyncF2 () : Async<string> =
+    async {
+        printfn "Start AsyncF2"
+        do! Async.Sleep 5000
+        printfn "Finish AsyncF2"
+        return "Hello"
+    }
+
+let GoodComposeAsync () =
+    async {
+        let! n = AsyncF1() |> Async.StartChild
+        let! s = AsyncF2() |> Async.StartChild
+        let! n' = n
+        let! s' = s
+        return sprintf "%s, %d" s' n' |> Results.Ok
+    }
+
+let BadComposeAsync () =
+    async {
+        let! n = AsyncF1()
+        let! s = AsyncF2()
+        return sprintf "%s, %d" s n |> Results.Ok
+    }
