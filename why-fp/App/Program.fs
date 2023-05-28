@@ -83,3 +83,11 @@ let rec myMap f xs =
 seq { 1..10 }
 |> List.ofSeq
 |> myMap (fun i -> i * i)
+
+let facroial x = 
+    let rec loop result n = 
+        match n with 
+        | 0 -> result
+        | _ -> loop (result * n) (n - 1)
+    
+    loop 1 x

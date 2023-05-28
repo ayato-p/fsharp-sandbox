@@ -13,7 +13,8 @@ let main args =
     let builder = WebApplication.CreateBuilder(args)
     let app = builder.Build()
 
-    app.MapGet("/ping", Func<IResult> Handlers.JustReturnPong) |> ignore
+    app.MapGet("/ping", Func<IResult> Handlers.JustReturnPong)
+    |> ignore
 
     app.MapGet("/async-ping", Func<Async<IResult>> Handlers.JustReturnAsyncPong)
     |> ignore
@@ -27,7 +28,8 @@ let main args =
     app.MapGet("/stream", Func<CancellationToken, IAsyncEnumerable<Handlers.Pong>> Handlers.ReturnSomethingEnumerable)
     |> ignore
 
-    app.MapGet("/large", Func<IResult> Handlers.ReturnLargePongs) |> ignore
+    app.MapGet("/large", Func<IResult> Handlers.ReturnLargePongs)
+    |> ignore
 
     app.MapGet("/good-compose-async", Func<Task<IResult>>(Handlers.GoodComposeAsync >> Async.StartAsTask))
     |> ignore

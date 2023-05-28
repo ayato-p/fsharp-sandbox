@@ -22,7 +22,11 @@ let doSomethingAsync () =
     }
 
 let JustReturnPong () =
-    doSomethingAsync () |> Async.AwaitTask |> Async.RunSynchronously |> ignore
+    doSomethingAsync ()
+    |> Async.AwaitTask
+    |> Async.RunSynchronously
+    |> ignore
+
     Results.Ok { pong = true; data = seq { 1..10000 } }
 
 let JustReturnAsyncPong () =
@@ -46,19 +50,19 @@ let JustReturnTaskPong () =
 
 let getPong x =
     async {
-        do! Async.Sleep 100
+        do! Async.Sleep 1000
         printfn "%d" x
 
         return
             { pong = true
-              data = seq { 1..10000 } |> List.ofSeq |> List.map ((*) 2) }
+              data = seq { 1..10 } |> List.ofSeq |> List.map ((*) 2) }
     }
 
 let ReturnSomethingEnumerable (token: CancellationToken) =
     let mutable cnt = 0
 
     taskSeq {
-        while cnt < 100 do
+        while cnt < 10 do
             cnt <- cnt + 1
             let! result = getPong cnt |> Async.StartAsTask
             yield result
